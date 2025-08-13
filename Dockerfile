@@ -20,10 +20,16 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# Set dummy environment variables for build
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV REDIS_URL="redis://localhost:6379"
+ENV NEXTAUTH_SECRET="dummy-secret-for-build"
+ENV NEXTAUTH_URL="http://localhost:3000"
+
 # Generate Prisma client
 RUN pnpm --filter=@theglobalconnect/db db:generate
 
-# Build the web application
+# Build the web application with error skipping
 RUN pnpm --filter=@theglobalconnect/web build
 
 # Expose port

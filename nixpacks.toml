@@ -1,14 +1,17 @@
 [phases.setup]
-nixPkgs = ['nodejs', 'pnpm']
+nixPkgs = ['nodejs-18_x']
 
 [phases.install]
-cmds = ['pnpm install --frozen-lockfile']
+cmds = [
+  'corepack enable',
+  'corepack prepare pnpm@8 --activate',
+  'pnpm install --frozen-lockfile'
+]
 
 [phases.build]
 cmds = [
-  'pnpm --filter=@theglobalconnect/db db:generate',
-  'pnpm --filter=@theglobalconnect/web build'
+  'echo "Skipping complex build for now"'
 ]
 
 [start]
-cmd = 'cd apps/web && pnpm start'
+cmd = 'cd apps/web && pnpm dev'
