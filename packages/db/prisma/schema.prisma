@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  handle    String   @unique
+  bio       String?
+  avatarUrl String?
+  coverUrl  String?
+  verified  Boolean  @default(false)
+  suspended Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Auth
+  accounts Account[]
+  sessions Session[]
+
+  // Social
+  posts             Post[]
+  reactions         Reaction[]
+  comments          Comment[]
+  friendRequests    Friendship[] @relation("FriendshipRequester")
+  friendRequestsTo  Friendship[] @relation("FriendshipAddressee")
+
+  // Chat
+  chatMembers ChatMember[]
+  messages    Message[]
+
+  // Notifications
+  notifications           Notification[]
+  sentNotifications       Notification[] @relation("NotificationSender")
+
+  // Reports and AI
+  reports    Report[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Friendship {
+  id          String            @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus  @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@index([createdAt])
+  @@map("friendships")
+}
+
+model Post {
+  id         String         @id @default(cuid())
+  authorId   String
+  content    String
+  media      Json[]         @default([])
+  visibility PostVisibility @default(PUBLIC)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+  comments  Comment[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([authorId, createdAt])
+  @@map("posts")
+}
+
+model Reaction {
+  id     String      @id @default(cuid())
+  postId String
+  userId String
+  type   ReactionType @default(LIKE)
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("reactions")
+}
+
+model Comment {
+  id              String   @id @default(cuid())
+  postId          String
+  authorId        String
+  content         String
+  parentCommentId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentComment Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies       Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentCommentId])
+  @@index([createdAt])
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  name      String?
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ChatMember[]
+  messages Message[]
+
+  @@index([createdAt])
+  @@map("chats")
+}
+
+model ChatMember {
+  id     String         @id @default(cuid())
+  chatId String
+  userId String
+  role   ChatMemberRole @default(MEMBER)
+  joinedAt DateTime     @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+  @@map("chat_members")
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  chatId    String
+  senderId  String
+  content   String
+  media     Json[]    @default([])
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([chatId, createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id       String           @id @default(cuid())
+  userId   String
+  senderId String?
+  type     NotificationType
+  data     Json
+  readAt   DateTime?
+  createdAt DateTime        @default(now())
+
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender User? @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model Report {
+  id         String     @id @default(cuid())
+  targetType TargetType
+  targetId   String
+  reporterId String
+  reason     String
+  resolved   Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([targetType, targetId])
+  @@index([reporterId])
+  @@index([createdAt])
+  @@index([resolved])
+  @@map("reports")
+}
+
+model AIFlag {
+  id         String          @id @default(cuid())
+  targetType TargetType
+  targetId   String
+  category   AIFlagCategory
+  score      Float
+  createdAt  DateTime        @default(now())
+
+  @@index([targetType, targetId])
+  @@index([category])
+  @@index([score])
+  @@index([createdAt])
+  @@map("ai_flags")
+}
+
+model Embedding {
+  id         String     @id @default(cuid())
+  targetType TargetType
+  targetId   String
+  vector     Json       // Will be float[] when pgvector is available
+  createdAt  DateTime   @default(now())
+
+  @@unique([targetType, targetId])
+  @@index([targetType])
+  @@index([createdAt])
+  @@map("embeddings")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum PostVisibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum ReactionType {
+  LIKE
+}
+
+enum ChatMemberRole {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  FRIEND_ACCEPT
+  POST_LIKE
+  POST_COMMENT
+  COMMENT_REPLY
+  MESSAGE
+  MENTION
+}
+
+enum TargetType {
+  USER
+  POST
+  COMMENT
+  MESSAGE
+}
+
+enum AIFlagCategory {
+  HATE
+  HARASSMENT
+  SELF_HARM
+  SEXUAL
+  VIOLENCE
+  SPAM
+}
