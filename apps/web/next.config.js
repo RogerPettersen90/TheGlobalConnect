@@ -4,7 +4,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
-  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },

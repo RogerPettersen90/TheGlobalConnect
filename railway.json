@@ -1,12 +1,15 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter=@theglobalconnect/db db:generate && pnpm --filter=@theglobalconnect/web build",
+    "watchPatterns": ["apps/web/**", "packages/**"]
   },
   "deploy": {
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3
+    "restartPolicyMaxRetries": 3,
+    "startCommand": "cd apps/web && pnpm start"
   }
 }

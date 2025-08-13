@@ -9,7 +9,8 @@
   ],
   "packageManager": "pnpm@8.15.0",
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm --filter=@theglobalconnect/db db:generate && pnpm --filter=@theglobalconnect/web build",
+    "start": "cd apps/web && pnpm start",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
