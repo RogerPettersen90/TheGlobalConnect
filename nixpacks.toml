@@ -10,8 +10,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'echo "Skipping complex build for now"'
+  'echo "Building..."',
+  'cd apps/web && pnpm build'
 ]
 
 [start]
-cmd = 'cd apps/web && pnpm dev'
+cmd = './start.sh'

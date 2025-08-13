@@ -1,0 +1,16 @@
+{
+  "name": "theglobalconnect-demo",
+  "version": "1.0.0",
+  "description": "TheGlobalConnect social platform demo",
+  "main": "deploy-demo.js",
+  "scripts": {
+    "start": "node deploy-demo.js",
+    "dev": "node deploy-demo.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
