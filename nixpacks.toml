@@ -3,16 +3,9 @@ nixPkgs = ['nodejs-18_x']
 
 [phases.install]
 cmds = [
-  'corepack enable',
-  'corepack prepare pnpm@8 --activate',
-  'pnpm install --frozen-lockfile'
-]
-
-[phases.build]
-cmds = [
-  'echo "Building..."',
-  'cd apps/web && pnpm build'
+  'cp package-simple.json package.json',
+  'npm install'
 ]
 
 [start]
-cmd = './start.sh'
+cmd = 'npm start'
