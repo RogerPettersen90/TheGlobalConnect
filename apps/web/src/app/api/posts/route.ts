@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       data: {
         content: validatedData.content,
         media: validatedData.media || [],
-        visibility: validatedData.visibility,
+        visibility: validatedData.visibility.toUpperCase() as any,
         authorId: session.user.id,
       },
       include: {

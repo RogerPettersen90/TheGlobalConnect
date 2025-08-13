@@ -4,7 +4,6 @@ import { getEnv } from '@theglobalconnect/config';
 const env = getEnv();
 
 export const redisClient = new Redis(env.REDIS_URL, {
-  retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
 });

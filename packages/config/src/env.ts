@@ -33,12 +33,12 @@ const envSchema = z.object({
   
   // App
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default(3000),
-  WS_PORT: z.string().transform(Number).default(3001),
+  PORT: z.string().transform(Number).default('3000'),
+  WS_PORT: z.string().transform(Number).default('3001'),
   
   // Rate Limiting
-  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default(15 * 60 * 1000), // 15 minutes
-  RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default(100),
+  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('900000'), // 15 minutes
+  RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
   
   // Feature Flags
   ENABLE_REGISTRATION: z.string().transform(val => val !== 'false').default('true'),
